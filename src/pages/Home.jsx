@@ -8,7 +8,7 @@ function Home() {
                 <Link to={`/income`} className="menu">
                     Income
                 </Link>
-                <Link to={`/`} className="menu">
+                <Link to={`/mangaeIncome`} className="menu">
                   Mange Income
                 </Link>
                 <Link to={`/wishlist/create`} className="menu">

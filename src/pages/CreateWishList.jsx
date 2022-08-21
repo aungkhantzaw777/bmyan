@@ -1,17 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Button, Form, Table, Pagination } from 'react-bootstrap';
-import { getWishlist, submit as send } from '../api/wishlist'
+import { Button, Form, Table,  } from 'react-bootstrap';
+import { getWishlists, submit as send, deleteWishList } from '../api/wishlist'
+import Pagination from "react-js-pagination";
+import CustomModal from '../components/CustomModal';
+import { useNavigate } from 'react-router-dom';
+
 
 function CreateWishList() {
     const [name, setName] = useState('')
     const [price, setPrice] = useState(0)
     const [wishlists, setWishlists] = useState([])
     const [paginationInfo, setPaginationInfo] = useState(null)
+    const [nameValid, setNameValid] = useState(false)
+    const [priceValid, setPriceValid] = useState(false)
+    const [isSubmit, setIsSubmit] = useState(false)
+    const [editShow, setEditShow] = useState(false)
+    const [deleteShow, setDeleteShow] = useState(false)
+    const [deleteId, setDeleteId] = useState(null)
+    const navigate = useNavigate()
 
     const submit = async (e) => {
         e.preventDefault();
-        send('wishlist/create', { name, price }).then(({ data }) => {
+        setIsSubmit(true)
 
+
+        send('wishlist/create', { name, price }).then(({ data }) => {
             setWishlists(prev => {
                 return [...prev, data]
             })
@@ -27,10 +40,19 @@ function CreateWishList() {
         setPrice(e.target.value)
     }
 
-    useEffect(() => {
-        getWishlist('wishlist').then(({ data }) => {
+    const fetchPage = (page) => {
+        getWishlists(`wishlist?page=${page}`).then(({ data }) => {
             let { data: d, ...paginate } = data
-            console.log(paginate)
+            setWishlists(d)
+            setPaginationInfo(paginate)
+        }).catch(e => {
+            console.log(e.message)
+        })
+    }
+
+    useEffect(() => {
+        getWishlists('wishlist').then(({ data }) => {
+            let { data: d, ...paginate } = data
             setWishlists(d)
             setPaginationInfo(paginate)
         }).catch(e => {
@@ -38,26 +60,20 @@ function CreateWishList() {
         })
     }, [])
 
-    var paginatinItems = () => {
-        if (!paginationInfo) {
-            return []
-        }
-        let items = []
-
-        for (let number = 1; number <= paginationInfo.last_page; number++) {
-            items.push(
-                <Pagination.Item key={number} active={number === 1}>
-                    {number}
-                </Pagination.Item>,
-            )
-        }
-        return (
-            <>
-                {items}
-            </>
-        )
+    const handleDelete = (id) => {
+        setDeleteId(id)
+        setDeleteShow(true)
+    }
+    const deleteAction = async (id) => {
+        await deleteWishList(`wishlist/delete/${id}`,{id})
+        setDeleteShow(false)
+        setDeleteId('')
+        window.location = '/wishlist/create'
     }
 
+    const navigateEdit = (id) => {
+        navigate(`/wishlist/edit/${id}`, {replace: true})
+    }
 
     return (
         <>
@@ -81,6 +97,7 @@ function CreateWishList() {
                         <tr>
                             <th>name</th>
                             <th>price</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,29 +106,45 @@ function CreateWishList() {
                                 <tr key={w.id}>
                                     <td>{w.name}</td>
                                     <td>{w.price}</td>
+                                    <td>
+                                        <a onClick={() => navigateEdit(w.id)} href="#">Edit</a>
+                                        |
+                                        <a className='text-red' onClick={() => handleDelete(w.id)} href="#">Delete</a>
+                                    </td>
                                 </tr>
                             ))
                         }
-
                     </tbody>
                 </Table>
 
-                {
-                    paginationInfo && (
+                <Pagination
+                    activePage={paginationInfo?.current_page ? paginationInfo?.current_page : 0}
+                    itemsCountPerPage={paginationInfo?.per_page ? paginationInfo?.per_page : 0}
+                    totalItemsCount={paginationInfo?.total ? paginationInfo?.total : 0}
+                    onChange={(pageNumber) => {
+                        fetchPage(pageNumber)
+                    }}
+                    pageRangeDisplayed={8}
+                    itemClass="page-item"
+                    linkClass="page-link"
+                    firstPageText="<<"
+                    lastPageText=">>"
+                />
+                {/* <Button onClick={() => setEditShow(true)}>modal</Button> */}
 
-                        <Pagination>
-                            <Pagination.First />
-                            <Pagination.Prev />
+                <CustomModal
+                show={deleteShow}
+                headerText='Are you sure you wanna delete'
+                bodyText={`This action going to delete permanetly!${deleteId}`}
+                hide={() => setDeleteShow(false)}
+                actionElement={(
+                    <>
+                    <Button onClick={() => setDeleteShow(false)}  variant="secondary">cancel</Button>
+                    <Button onClick={() => deleteAction(deleteId)} variant="danger">Delete</Button>
+                    </>
+                )}
+                />
 
-                            {
-                                paginatinItems()
-                            }
-                            
-                            <Pagination.Next />
-                            <Pagination.Last />
-                        </Pagination>
-                    )
-                }
             </div>
         </>
     )

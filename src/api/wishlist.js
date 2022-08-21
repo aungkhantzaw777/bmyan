@@ -7,6 +7,13 @@ function submit(url, data) {
         data
     })
 }
+function getWishlists(url) {
+    return service({
+        url,
+        method: 'GET',
+    })
+}
+
 function getWishlist(url) {
     return service({
         url,
@@ -14,7 +21,26 @@ function getWishlist(url) {
     })
 }
 
+function deleteWishList(url, data) {
+    return service({
+        url,
+        method: 'DELETE',
+        data
+    })
+}
+
+function updateWishlist(url, data) {
+    return service({
+        url,
+        method: 'PATCH',
+        data
+    })
+}
+ 
 export {
     submit,
-    getWishlist
+    getWishlists,
+    deleteWishList,
+    getWishlist,
+    updateWishlist
 }
