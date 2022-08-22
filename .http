@@ -1,0 +1,7 @@
+POST http://bmyanmar-backend.test/api/manageIncome HTTP/1.1
+content-type: application/json
+
+{
+    "wishlist_id": 1,
+    "date": "Wed, 21 Oct 2015 18:27:50 GMT"
+}
