@@ -8,8 +8,15 @@ function submit(url, data) {
     })
 }
 
+function initialize(url) {
+    return service({
+        url,
+        method: 'GET'
+    })
+}
+
  
 export {
     submit,
-    
+    initialize
 }
